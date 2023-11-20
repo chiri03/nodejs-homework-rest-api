@@ -25,11 +25,70 @@ const getContactById = async (contactId) => {
   }
 };
 
-const addContact = async (body) => {};
+const addContact = async (body) => {
+  app.post("/api/contacts", async (req, res) => {
+    try {
+      const { name, email, phone } = req.body;
 
-const removeContact = async (contactId) => {};
+      if (!name || !email || !phone) {
+        return res
+          .status(400)
+          .json({ message: "Missing required name, email, or phone field" });
+      }
 
-const updateContact = async (contactId, body) => {};
+      const addedContact = await addContact({ name, email, phone });
+
+      res.status(201).json(addedContact);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+};
+
+const removeContact = async (id) => {
+  try {
+    const index = contacts.findIndex((contact) => contact.id === parseInt(id));
+
+    if (index !== -1) {
+      const deletedContact = contacts.splice(index, 1)[0];
+
+      await fs.writeFile(
+        "contacts.json",
+        JSON.stringify(contacts, null, 2),
+        "utf-8"
+      );
+
+      return deletedContact;
+    } else {
+      throw new Error("Contact not found");
+    }
+  } catch (error) {
+    throw new Error("Error removing contact: " + error.message);
+  }
+};
+
+const updateContact = async (id, updatedFields) => {
+  try {
+    const index = contacts.findIndex((contact) => contact.id === parseInt(id));
+
+    if (index !== -1) {
+      contacts[index] = { ...contacts[index], ...updatedFields };
+
+      await fs.writeFile(
+        "contacts.json",
+        JSON.stringify(contacts, null, 2),
+        "utf-8"
+      );
+
+      return contacts[index];
+    } else {
+      throw new Error("Contact not found");
+    }
+  } catch (error) {
+    throw new Error("Error updating contact: " + error.message);
+  }
+};
 
 module.exports = {
   listContacts,
